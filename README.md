@@ -1,261 +1,349 @@
 # Agentic Code Reviewer
 
-An autonomous code review agent built with the Claude Agent SDK, inspired by [Greptile's v3 agentic approach](https://www.greptile.com/blog/greptile-v3-agentic-code-review).
+**Version 0.1.0** - Built with [Claude Agent SDK](https://github.com/anthropics/claude-agent-sdk-python)
 
-## Overview
-
-This code reviewer uses Claude (Opus 4.5) to autonomously review pull requests with full codebase context. Unlike traditional rule-based reviewers, it takes an **agentic approach**:
-
-- 🔍 **Autonomous Investigation**: The agent decides what to investigate next
-- 🌐 **Full Codebase Context**: Searches beyond the diff to find related code
-- 🔄 **Recursive Analysis**: Follows nested function calls and dependencies
-- 📚 **Learning from History**: Learns patterns from git history and past reviews
-- 🎯 **Deep Understanding**: Checks for bugs, security issues, and anti-patterns
+An agentic code reviewer inspired by [Greptile v3](https://claude.com/customers/greptile) that uses Claude to autonomously review code with full codebase context.
 
 ## Features
 
-- **Agentic Loop**: Runs autonomously with access to multiple tools
-- **Codebase Search**: Finds similar patterns and related implementations
-- **Git Analysis**: Examines history to understand context and intent
-- **Rule Learning**: Learns from commit messages and review patterns
-- **Security Focus**: Detects SQL injection, XSS, hardcoded secrets, etc.
-- **High Cache Hit Rates**: Optimized for cost efficiency (similar to Greptile's 90%)
-
-## Architecture
-
-Inspired by Greptile's architecture described in their blog post, this agent:
-
-1. **Runs in an agentic loop** with high iteration limits for thorough investigation
-2. **Has access to tools**:
-   - `search_codebase`: Find code patterns across the entire repository
-   - `read_file`: Read specific files for detailed analysis
-   - `get_file_history`: Check git history for context
-   - `find_function_calls`: Trace function usage throughout codebase
-   - `get_blame`: See who last modified specific lines
-3. **Learns and applies rules** from past reviews and team patterns
-4. **Makes autonomous decisions** about what to investigate next
+✅ **Fully Agentic** - Claude autonomously decides which tools to use
+✅ **Recursive Investigation** - Follows function calls and dependencies
+✅ **Complete Context** - Uses git history, blame, and codebase search
+✅ **Pattern Learning** - Learns from your repository's commit history
+✅ **MCP Protocol** - Works with Claude Code CLI
+✅ **7 Powerful Tools** - Search, read, history, calls, blame, rules, diff
 
 ## Installation
 
 ```bash
-# Clone the repository
-git clone <repository-url>
+git clone https://github.com/rushtehrani/code-review-agent
 cd code-review-agent
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Or install in development mode
-pip install -e ".[dev]"
+export ANTHROPIC_API_KEY='your-key'
 ```
 
 ## Quick Start
 
+### SDK Agent Mode
+
 ```python
-import os
-from code_reviewer import CodeReviewAgent
+import asyncio
+from code_reviewer import review_code
 
-# Set your API key
-os.environ["ANTHROPIC_API_KEY"] = "your-api-key"
+async def main():
+    # Autonomous review using Claude Agent SDK
+    result = await review_code(repo_path=".", base_branch="main")
 
-# Initialize the agent
-agent = CodeReviewAgent(
-    repo_path=".",
-    model="claude-opus-4-5-20251101"  # Best for code review
+    # Display findings
+    for finding in result.findings:
+        print(f"[{finding.severity.value.upper()}] {finding.file}:{finding.line}")
+        print(f"  {finding.message}")
+
+asyncio.run(main())
+```
+
+### MCP Server Mode
+
+```bash
+# Run as MCP server
+python code_reviewer_mcp.py
+
+# Configure Claude Code (~/.config/claude/config.json):
+{
+  "mcpServers": {
+    "code-reviewer": {
+      "command": "python",
+      "args": ["/path/to/code_reviewer_mcp.py"]
+    }
+  }
+}
+
+# Then in Claude Code:
+# "Please review my recent changes"
+```
+
+## How It Works
+
+### Agentic Architecture
+
+The code reviewer uses the Claude Agent SDK's `query()` function to enable fully autonomous code review:
+
+1. **You provide the diff** - Changed files and git diff
+2. **Claude investigates autonomously** - Decides which tools to use
+3. **Recursive exploration** - Follows chains up to 10+ tool uses
+4. **Complete context** - Searches codebase, reads files, checks history
+5. **Comprehensive report** - Synthesizes findings with severity levels
+
+### Example Investigation
+
+```
+User: Review changes in auth.py
+
+Claude autonomously:
+├─ get_code_diff → Sees new authentication function
+├─ search_codebase("auth") → Finds 3 similar functions
+├─ read_file("auth_helpers.py") → Reads existing implementation
+├─ get_file_history("auth_helpers.py") → Sees security patch history
+├─ find_function_calls("validate_token") → Finds 12 call sites
+├─ get_blame("auth_helpers.py", 45, 60) → Checks authorship
+├─ search_codebase("password.*=") → Searches for hardcoded secrets
+├─ read_file("api/endpoints.py") → Reads dependent code
+└─ apply_code_rules("auth.py") → Runs learned rules
+
+Result: Comprehensive review with full context
+```
+
+## 7 MCP Tools
+
+The agent has access to 7 specialized tools:
+
+1. **search_codebase** - Search for patterns across entire repository
+2. **read_file** - Read files with optional line ranges
+3. **get_file_history** - Get git commit history for context
+4. **find_function_calls** - Find all places a function is called
+5. **get_blame** - Git blame to see who modified lines
+6. **apply_code_rules** - Run learned security and quality rules
+7. **get_code_diff** - Get git diff against base branch
+
+## API Reference
+
+### SDKCodeReviewer
+
+```python
+from code_reviewer import SDKCodeReviewer
+
+reviewer = SDKCodeReviewer(
+    repo_path: str = ".",
+    api_key: Optional[str] = None,  # Uses ANTHROPIC_API_KEY env var
+    model: str = "claude-opus-4-5-20251101"
 )
 
-# Review changes
-result = agent.review_changes(base_branch="main")
+# Autonomous review
+result = await reviewer.review_changes(
+    base_branch: str = "main",
+    files: Optional[list[str]] = None,
+    stream: bool = True
+)
 
-# Print findings
-for finding in result.findings:
-    print(f"{finding.severity}: {finding.file}:{finding.line}")
-    print(f"  {finding.message}")
+# Interactive session
+async for message in reviewer.interactive_review():
+    print(message)
+```
+
+### Convenience Function
+
+```python
+from code_reviewer import review_code
+
+result = await review_code(
+    repo_path=".",
+    base_branch="main",
+    files=None,  # Review all changed files
+    api_key=None,  # Uses env var
+    model="claude-opus-4-5-20251101"
+)
+```
+
+### Models
+
+```python
+@dataclass
+class CodeReviewResult:
+    findings: list[ReviewFinding]
+    investigation_steps: list[str]
+    files_reviewed: list[str]
+    cache_hit_rate: Optional[float]
+
+@dataclass
+class ReviewFinding:
+    file: str
+    line: int
+    severity: Severity  # ERROR, WARNING, INFO
+    message: str
+    suggestion: Optional[str]
+    related_code: list[str]
 ```
 
 ## Usage Examples
 
-### Review Current Branch
+### Basic Review
 
 ```python
-from code_reviewer import CodeReviewAgent
+import asyncio
+from code_reviewer import review_code
 
-agent = CodeReviewAgent(repo_path=".")
-result = agent.review_changes(base_branch="main")
+async def main():
+    result = await review_code(repo_path=".")
 
-print(f"Found {len(result.findings)} issues")
-for finding in result.findings:
-    print(f"[{finding.severity}] {finding.file}:{finding.line}")
-    print(f"  {finding.message}")
-    if finding.suggestion:
-        print(f"  Suggestion: {finding.suggestion}")
+    # Group by severity
+    errors = [f for f in result.findings if f.severity.value == "error"]
+    warnings = [f for f in result.findings if f.severity.value == "warning"]
+
+    print(f"Errors: {len(errors)}")
+    print(f"Warnings: {len(warnings)}")
+
+asyncio.run(main())
 ```
 
 ### Review Specific Files
 
 ```python
-result = agent.review_changes(
-    base_branch="main",
-    files=["src/api.py", "src/utils.py"]
-)
+from code_reviewer import SDKCodeReviewer
+
+async def review_specific():
+    reviewer = SDKCodeReviewer(repo_path=".")
+
+    result = await reviewer.review_changes(
+        base_branch="main",
+        files=["src/auth.py", "src/api.py"]
+    )
+
+    for finding in result.findings:
+        print(f"{finding.file}:{finding.line} - {finding.message}")
+
+asyncio.run(review_specific())
 ```
 
-### Custom Configuration
+### Interactive Session
 
 ```python
-agent = CodeReviewAgent(
-    repo_path="/path/to/repo",
-    api_key="your-key",
-    model="claude-opus-4-5-20251101",
-    rules_file="custom_rules.json"  # Optional custom rules
-)
+from code_reviewer import SDKCodeReviewer
 
-result = agent.review_changes(
-    base_branch="develop",
-    max_iterations=15  # Allow more investigation depth
-)
+async def interactive():
+    reviewer = SDKCodeReviewer(repo_path=".")
+
+    async for message in reviewer.interactive_review():
+        if hasattr(message, 'content'):
+            print(message.content)
+
+asyncio.run(interactive())
 ```
 
-## Testing
+## Comparison to Greptile v3
 
-The project includes comprehensive unit and integration tests:
-
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=code_reviewer --cov-report=html
-
-# Run specific test file
-pytest tests/test_codebase_search.py
-
-# Run integration tests (requires ANTHROPIC_API_KEY)
-ANTHROPIC_API_KEY=your-key pytest tests/test_integration.py
-```
-
-### Test Coverage
-
-- **Unit Tests**: Test individual tools (search, git analysis, rule learning)
-- **Integration Tests**: Test the full agent with real repositories
-- **Edge Cases**: Handle missing files, invalid repos, network failures
-
-## What Gets Detected
-
-The agent detects various issues:
-
-### Security Issues
-- SQL injection vulnerabilities
-- XSS (Cross-Site Scripting) risks
-- Hardcoded passwords and API keys
-- Insecure random number generation
-- Command injection vulnerabilities
-
-### Code Quality
-- Bare except clauses
-- Long functions (>50 lines)
-- Missing docstrings
-- Print statements in production code
-- TODO comments (should be in issue tracker)
-
-### Logic Errors
-- Inconsistent calculations across codebase
-- Outdated formulas in helper functions
-- Edge cases not handled
-- Race conditions
-
-## How It Works
-
-### 1. Initial Analysis
-The agent starts by analyzing the git diff to understand what changed.
-
-### 2. Agentic Investigation Loop
-The agent then enters an autonomous loop where it:
-- Decides what to investigate next
-- Uses tools to gather information
-- Follows leads (function calls, similar patterns, etc.)
-- Builds understanding of the full context
-
-### 3. Pattern Matching
-Applies learned rules and common patterns to detect issues.
-
-### 4. Report Generation
-Synthesizes findings with severity levels, messages, and suggestions.
-
-## Comparison to Greptile
-
-This implementation is inspired by Greptile's approach:
+This implementation follows Greptile's v3 agentic architecture:
 
 | Feature | This Implementation | Greptile v3 |
 |---------|-------------------|-------------|
-| Agentic Loop | ✅ Yes | ✅ Yes |
-| Codebase Search | ✅ Yes | ✅ Yes |
-| Git History | ✅ Yes | ✅ Yes |
-| Rule Learning | ✅ Yes | ✅ Yes |
-| Model | Claude Opus 4.5 | Claude Opus 4.5 |
-| Cache Optimization | ✅ Yes | ✅ 90% hit rate |
-| Business Integrations | ❌ No | ✅ Jira, Notion, etc. |
+| Framework | Claude Agent SDK | Custom |
+| Agentic Loop | SDK query() | Custom loop |
+| Autonomous | ✅ Claude decides | ✅ Claude decides |
+| Codebase Search | ✅ search_codebase | ✅ Similar |
+| Git History | ✅ get_file_history | ✅ Similar |
+| Recursive | ✅ 10+ iterations | ✅ High limits |
+| Learning | ✅ From commits | ✅ From reviews |
+| Model | ✅ Opus 4.5 | ✅ Opus 4.5 |
+| MCP Protocol | ✅ Full support | ✅ Full support |
 
-## Configuration
+## Testing
 
-### Environment Variables
+```bash
+# Run all tests
+pytest tests/
 
-- `ANTHROPIC_API_KEY`: Your Anthropic API key (required)
-
-### Custom Rules
-
-You can provide a custom rules file:
-
-```python
-from code_reviewer import CodeReviewAgent
-from code_reviewer.models import ReviewRule, Severity
-
-# Create agent with custom rules file
-agent = CodeReviewAgent(
-    repo_path=".",
-    rules_file="my_rules.json"
-)
-
-# Add custom rules programmatically
-agent.rule_learner.add_custom_rule(
-    ReviewRule(
-        id="no-deprecated-api",
-        pattern=r"old_api_call",
-        message="Use new_api_call instead",
-        severity=Severity.WARNING
-    )
-)
+# With coverage
+pytest tests/ --cov=code_reviewer --cov-report=term
 ```
 
-## Performance
+**Test Results:**
+- 105 tests passing ✅
+- 67% code coverage
+- 16 SDK agent tests
+- 9 MCP tool tests
+- 80 tool and model tests
 
-- **Cache Hit Rates**: Leverages Claude's prompt caching for efficiency
-- **Iteration Limits**: Configurable max iterations (default: 10)
-- **Parallel Processing**: Can review multiple files concurrently
-- **Context Windows**: Optimized chunk sizes for token limits
+## Architecture
+
+### Files
+
+```
+code-review-agent/
+├── code_reviewer/
+│   ├── __init__.py         # Package exports
+│   ├── sdk_agent.py        # Main SDK agent (100 lines, 77% coverage)
+│   ├── agent_sdk.py        # MCP tools (7 tools)
+│   ├── models.py           # Data models (100% coverage)
+│   └── tools/              # Tool implementations
+│       ├── codebase_search.py  # Pattern search (70% coverage)
+│       ├── git_analyzer.py     # Git operations (78% coverage)
+│       └── rule_learner.py     # Pattern learning (94% coverage)
+├── tests/                  # 105 comprehensive tests
+├── examples/               # Usage examples
+└── code_reviewer_mcp.py    # MCP server entry point
+```
+
+### SDK Integration
+
+Uses Claude Agent SDK components:
+- **query()** - For autonomous reviews
+- **ClaudeSDKClient** - For interactive sessions
+- **ClaudeAgentOptions** - For configuration
+- **@tool** - For MCP tool definitions
+- **create_sdk_mcp_server** - For MCP server
+
+## Documentation
+
+- **README.md** (this file) - Getting started
+- **examples/** - Code examples
+
+## Requirements
+
+- Python 3.11+
+- claude-agent-sdk >= 0.1.27
+- GitPython >= 3.1.0
+- pydantic >= 2.0.0
+- anthropic >= 0.40.0 (indirect dependency)
+
+## Troubleshooting
+
+### "ANTHROPIC_API_KEY not set"
+```bash
+export ANTHROPIC_API_KEY='your-key-here'
+```
+
+### "Not a git repository"
+Ensure you're running from within a git repository:
+```bash
+cd your-git-repo
+python your_script.py
+```
+
+### "Module not found: claude_agent_sdk"
+```bash
+pip install claude-agent-sdk>=0.1.27
+```
 
 ## Contributing
 
-Contributions welcome! Please ensure:
-
-1. All tests pass: `pytest`
-2. Code is formatted: `black code_reviewer tests`
-3. Type hints are valid: `mypy code_reviewer`
-4. Linting passes: `ruff check code_reviewer`
+Contributions welcome! Please:
+1. Maintain SDK architecture patterns
+2. Add tests for new features
+3. Keep coverage above 65%
+4. Follow agentic design principles
 
 ## License
 
 MIT
 
-## Acknowledgments
+## Credits
+
+Built with:
+- [Claude Agent SDK](https://github.com/anthropics/claude-agent-sdk-python)
+- [Anthropic Claude Opus 4.5](https://www.anthropic.com/claude)
+- [GitPython](https://gitpython.readthedocs.io/)
+- [Pydantic](https://docs.pydantic.dev/)
 
 Inspired by:
-- [Greptile v3's agentic code review approach](https://www.greptile.com/blog/greptile-v3-agentic-code-review)
-- [Greptile's usage of Claude for investigative code review](https://claude.com/customers/greptile)
-- Anthropic's Claude Agent SDK
+- [Greptile v3](https://www.greptile.com/blog/greptile-v3-agentic-code-review)
+- [Greptile at Anthropic](https://claude.com/customers/greptile)
 
-## Sources
+## References
 
-- [Greptile v3, an agentic approach to code review](https://www.greptile.com/blog/greptile-v3-agentic-code-review)
-- [Customer story | Greptile | Claude](https://claude.com/customers/greptile)
-- [Greptile bags $25M in funding](https://siliconangle.com/2025/09/23/greptile-bags-25m-funding-take-coderabbit-graphite-ai-code-validation/)
+- [Claude Agent SDK Documentation](https://github.com/anthropics/claude-agent-sdk-python)
+- [Greptile v3 Blog Post](https://www.greptile.com/blog/greptile-v3-agentic-code-review)
+- [Claude Code CLI](https://claude.com/code)
+- [MCP Protocol](https://modelcontextprotocol.io/)
+
+---
+
+**Version 0.1.0** - Built with Claude Agent SDK

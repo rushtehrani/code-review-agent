@@ -240,13 +240,12 @@ MESSAGE: Function too long
         assert hasattr(reviewer.rule_learner, 'apply_rules')
         assert len(reviewer.rule_learner.rules) > 0
 
-    def test_sdk_version_bump(self):
-        """Test that version was bumped for SDK rewrite"""
+    def test_sdk_version(self):
+        """Test that version is set correctly"""
         from code_reviewer import __version__
 
-        # Should be 2.0.0 or higher for major SDK rewrite
-        major_version = int(__version__.split('.')[0])
-        assert major_version >= 2
+        # Should be 0.1.0
+        assert __version__ == "0.1.0"
 
     def test_parsing_handles_incomplete_findings(self, temp_git_repo):
         """Test that parsing handles incomplete findings gracefully"""
