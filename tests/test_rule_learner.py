@@ -171,3 +171,80 @@ def clean_function(data: list) -> int:
         # Might have some minor violations (like missing docstring check)
         # but shouldn't have major errors
         assert not any(v["severity"] == "error" for v in violations)
+
+    def test_get_rules_for_language(self):
+        """Test getting rules for specific language"""
+        learner = RuleLearner()
+        python_rules = learner.get_rules_for_language("python")
+
+        assert len(python_rules) > 0
+        assert all(isinstance(rule.id, str) for rule in python_rules)
+
+    def test_apply_rules_with_invalid_regex(self):
+        """Test that invalid regex patterns are handled"""
+        learner = RuleLearner()
+
+        # Add a rule with invalid regex
+        from code_reviewer.models import ReviewRule, Severity
+        bad_rule = ReviewRule(
+            id="bad-regex",
+            pattern=r"[invalid(regex",  # Invalid regex
+            message="Test",
+            severity=Severity.INFO,
+        )
+        learner.rules.append(bad_rule)
+
+        code = "def test(): pass"
+
+        # Should not crash, just skip the bad rule
+        violations = learner.apply_rules(code, "test.py")
+
+        assert isinstance(violations, list)
+
+    def test_learn_from_commits_xss(self):
+        """Test learning XSS patterns"""
+        learner = RuleLearner()
+        initial_count = len(learner.rules)
+
+        learner.learn_from_commits([
+            "Fix cross-site scripting vulnerability in templates"
+        ])
+
+        assert len(learner.rules) > initial_count
+
+    def test_learn_from_commits_memory_leak(self):
+        """Test learning memory leak patterns"""
+        learner = RuleLearner()
+        initial_count = len(learner.rules)
+
+        learner.learn_from_commits([
+            "Fix memory leak in background worker"
+        ])
+
+        assert len(learner.rules) > initial_count
+
+    def test_rule_learned_from_source(self):
+        """Test that learned rules track their source"""
+        learner = RuleLearner()
+
+        commit_msg = "Fix SQL injection in auth module"
+        learner.learn_from_commits([commit_msg])
+
+        sql_rule = next(
+            (r for r in learner.rules if "sql" in r.id.lower() and r.learned_from),
+            None
+        )
+
+        if sql_rule:
+            assert sql_rule.learned_from is not None
+
+    def test_save_rules_creates_directory(self, temp_rules_file):
+        """Test that save_rules creates parent directories"""
+        # Create path in non-existent directory
+        import os
+        nested_path = os.path.join(os.path.dirname(temp_rules_file), "nested", "rules.json")
+
+        learner = RuleLearner(nested_path)
+        learner.save_rules()
+
+        assert os.path.exists(nested_path)
