@@ -52,16 +52,16 @@ except:  # Bare except
 
     def test_sdk_agent_import(self):
         """Test that SDK agent can be imported"""
-        from code_reviewer.agent import SDKCodeReviewer, review_code
+        from code_reviewer.agent import CodeReviewAgent, review_code
 
-        assert SDKCodeReviewer is not None
+        assert CodeReviewAgent is not None
         assert review_code is not None
 
     def test_sdk_agent_initialization(self, temp_git_repo):
         """Test SDK agent initialization"""
-        from code_reviewer.agent import SDKCodeReviewer
+        from code_reviewer.agent import CodeReviewAgent
 
-        reviewer = SDKCodeReviewer(repo_path=temp_git_repo)
+        reviewer = CodeReviewAgent(repo_path=temp_git_repo)
 
         assert reviewer.repo_path == Path(temp_git_repo).absolute()
         assert reviewer.search is not None
@@ -71,20 +71,20 @@ except:  # Bare except
 
     def test_sdk_agent_initialization_no_git(self):
         """Test SDK agent handles non-git directory"""
-        from code_reviewer.agent import SDKCodeReviewer
+        from code_reviewer.agent import CodeReviewAgent
 
         temp_dir = tempfile.mkdtemp()
         try:
-            reviewer = SDKCodeReviewer(repo_path=temp_dir)
+            reviewer = CodeReviewAgent(repo_path=temp_dir)
             assert reviewer.git is None
         finally:
             shutil.rmtree(temp_dir)
 
     def test_create_review_prompt(self, temp_git_repo):
         """Test review prompt creation"""
-        from code_reviewer.agent import SDKCodeReviewer
+        from code_reviewer.agent import CodeReviewAgent
 
-        reviewer = SDKCodeReviewer(repo_path=temp_git_repo)
+        reviewer = CodeReviewAgent(repo_path=temp_git_repo)
 
         diff = "+def new_function(): pass"
         files = ["main.py"]
@@ -98,9 +98,9 @@ except:  # Bare except
 
     def test_parse_findings_from_response(self, temp_git_repo):
         """Test parsing findings from Claude's response"""
-        from code_reviewer.agent import SDKCodeReviewer
+        from code_reviewer.agent import CodeReviewAgent
 
-        reviewer = SDKCodeReviewer(repo_path=temp_git_repo)
+        reviewer = CodeReviewAgent(repo_path=temp_git_repo)
 
         response = """
 FILE: main.py
@@ -126,10 +126,10 @@ MESSAGE: Function too long
 
     def test_create_finding(self, temp_git_repo):
         """Test finding creation"""
-        from code_reviewer.agent import SDKCodeReviewer
+        from code_reviewer.agent import CodeReviewAgent
         from code_reviewer.models import Severity
 
-        reviewer = SDKCodeReviewer(repo_path=temp_git_repo)
+        reviewer = CodeReviewAgent(repo_path=temp_git_repo)
 
         data = {
             "file": "test.py",
@@ -149,11 +149,11 @@ MESSAGE: Function too long
     @pytest.mark.asyncio
     async def test_review_changes_no_git(self):
         """Test review in non-git directory"""
-        from code_reviewer.agent import SDKCodeReviewer
+        from code_reviewer.agent import CodeReviewAgent
 
         temp_dir = tempfile.mkdtemp()
         try:
-            reviewer = SDKCodeReviewer(repo_path=temp_dir)
+            reviewer = CodeReviewAgent(repo_path=temp_dir)
             result = await reviewer.review_changes()
 
             assert len(result.findings) == 0
@@ -164,23 +164,23 @@ MESSAGE: Function too long
     @pytest.mark.asyncio
     async def test_review_changes_no_changes(self, temp_git_repo):
         """Test review with no changes"""
-        from code_reviewer.agent import SDKCodeReviewer
+        from code_reviewer.agent import CodeReviewAgent
 
         # Reset to initial commit
         repo = git.Repo(temp_git_repo)
         repo.head.reset('HEAD~1', index=True, working_tree=True)
 
-        reviewer = SDKCodeReviewer(repo_path=temp_git_repo)
+        reviewer = CodeReviewAgent(repo_path=temp_git_repo)
         result = await reviewer.review_changes()
 
         assert "No changes detected" in result.investigation_steps
 
     def test_sdk_options_configuration(self, temp_git_repo):
         """Test that SDK options are properly configured"""
-        from code_reviewer.agent import SDKCodeReviewer
+        from code_reviewer.agent import CodeReviewAgent
         import os
 
-        reviewer = SDKCodeReviewer(
+        reviewer = CodeReviewAgent(
             repo_path=temp_git_repo,
             api_key="test-key",
             model="claude-opus-4-5-20251101"
@@ -194,9 +194,9 @@ MESSAGE: Function too long
     def test_exports_from_init(self):
         """Test that SDK agent is exported from package"""
         try:
-            from code_reviewer import SDKCodeReviewer, review_code
+            from code_reviewer import CodeReviewAgent, review_code
 
-            assert SDKCodeReviewer is not None
+            assert CodeReviewAgent is not None
             assert review_code is not None
         except ImportError:
             pytest.skip("SDK not fully initialized")
@@ -221,9 +221,9 @@ MESSAGE: Function too long
 
     def test_sdk_agent_tools_initialized(self, temp_git_repo):
         """Test that all tools are properly initialized"""
-        from code_reviewer.agent import SDKCodeReviewer
+        from code_reviewer.agent import CodeReviewAgent
 
-        reviewer = SDKCodeReviewer(repo_path=temp_git_repo)
+        reviewer = CodeReviewAgent(repo_path=temp_git_repo)
 
         # Check search tool
         assert reviewer.search is not None
@@ -249,9 +249,9 @@ MESSAGE: Function too long
 
     def test_parsing_handles_incomplete_findings(self, temp_git_repo):
         """Test that parsing handles incomplete findings gracefully"""
-        from code_reviewer.agent import SDKCodeReviewer
+        from code_reviewer.agent import CodeReviewAgent
 
-        reviewer = SDKCodeReviewer(repo_path=temp_git_repo)
+        reviewer = CodeReviewAgent(repo_path=temp_git_repo)
 
         # Incomplete finding (missing severity)
         response = """
@@ -270,9 +270,9 @@ MESSAGE: Some issue
 
     def test_prompt_includes_all_tools(self, temp_git_repo):
         """Test that prompt mentions all available tools"""
-        from code_reviewer.agent import SDKCodeReviewer
+        from code_reviewer.agent import CodeReviewAgent
 
-        reviewer = SDKCodeReviewer(repo_path=temp_git_repo)
+        reviewer = CodeReviewAgent(repo_path=temp_git_repo)
         prompt = reviewer._create_review_prompt("+test", ["test.py"], "main")
 
         # All 7 tools should be mentioned
@@ -285,9 +285,9 @@ MESSAGE: Some issue
 
     def test_prompt_emphasizes_agentic_behavior(self, temp_git_repo):
         """Test that prompt encourages agentic investigation"""
-        from code_reviewer.agent import SDKCodeReviewer
+        from code_reviewer.agent import CodeReviewAgent
 
-        reviewer = SDKCodeReviewer(repo_path=temp_git_repo)
+        reviewer = CodeReviewAgent(repo_path=temp_git_repo)
         prompt = reviewer._create_review_prompt("+test", ["test.py"], "main")
 
         # Should encourage autonomous, recursive investigation

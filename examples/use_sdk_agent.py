@@ -7,7 +7,7 @@ This shows how to use the completely rewritten SDK agent.
 
 import asyncio
 import os
-from code_reviewer import SDKCodeReviewer, review_code
+from code_reviewer import CodeReviewAgent, review_code
 
 
 async def example_basic_review():
@@ -44,7 +44,7 @@ async def example_detailed_review():
     print("=" * 70)
 
     # Create SDK reviewer
-    reviewer = SDKCodeReviewer(
+    reviewer = CodeReviewAgent(
         repo_path=".",
         model="claude-opus-4-5-20251101"
     )
@@ -104,7 +104,7 @@ async def example_interactive_session():
     print("Example 4: Interactive SDK Session")
     print("=" * 70)
 
-    reviewer = SDKCodeReviewer(repo_path=".")
+    reviewer = CodeReviewAgent(repo_path=".")
 
     print("\nStarting interactive session...")
     print("(This would allow back-and-forth conversation)")

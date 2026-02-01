@@ -9,12 +9,12 @@ Two modes of operation:
 2. MCP Server: Use with Claude Code via MCP protocol
 """
 
-from code_reviewer.agent import SDKCodeReviewer, review_code
+from code_reviewer.agent import CodeReviewAgent, review_code
 from code_reviewer.mcp_tools import server as mcp_server
 from code_reviewer.models import CodeReviewResult, ReviewFinding
 
 __all__ = [
-    "SDKCodeReviewer",  # Main SDK agent
+    "CodeReviewAgent",  # Main SDK agent
     "review_code",  # Convenience function
     "mcp_server",  # MCP server for Claude Code
     "CodeReviewResult",  # Result model

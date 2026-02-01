@@ -107,12 +107,12 @@ The agent has access to 7 specialized tools:
 
 ## API Reference
 
-### SDKCodeReviewer
+### CodeReviewAgent
 
 ```python
-from code_reviewer import SDKCodeReviewer
+from code_reviewer import CodeReviewAgent
 
-reviewer = SDKCodeReviewer(
+reviewer = CodeReviewAgent(
     repo_path: str = ".",
     api_key: Optional[str] = None,  # Uses ANTHROPIC_API_KEY env var
     model: str = "claude-opus-4-5-20251101"
@@ -188,10 +188,10 @@ asyncio.run(main())
 ### Review Specific Files
 
 ```python
-from code_reviewer import SDKCodeReviewer
+from code_reviewer import CodeReviewAgent
 
 async def review_specific():
-    reviewer = SDKCodeReviewer(repo_path=".")
+    reviewer = CodeReviewAgent(repo_path=".")
 
     result = await reviewer.review_changes(
         base_branch="main",
@@ -207,10 +207,10 @@ asyncio.run(review_specific())
 ### Interactive Session
 
 ```python
-from code_reviewer import SDKCodeReviewer
+from code_reviewer import CodeReviewAgent
 
 async def interactive():
-    reviewer = SDKCodeReviewer(repo_path=".")
+    reviewer = CodeReviewAgent(repo_path=".")
 
     async for message in reviewer.interactive_review():
         if hasattr(message, 'content'):

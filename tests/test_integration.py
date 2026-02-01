@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import pytest
 import git
-from code_reviewer.agent import SDKCodeReviewer
+from code_reviewer.agent import CodeReviewAgent
 
 
 class TestIntegration:
@@ -95,7 +95,7 @@ password = "admin123"  # Hard-coded password
         repo.git.checkout(feature_branch)
 
         # Create agent and review
-        agent = SDKCodeReviewer(repo_path)
+        agent = CodeReviewAgent(repo_path)
         result = await agent.review_changes(base_branch="master")
 
         # Should find multiple issues
@@ -137,7 +137,7 @@ password = "admin123"  # Hard-coded password
 
         try:
             # SDK agent can be created without API key, but review_changes will fail
-            agent = SDKCodeReviewer(repo_path)
+            agent = CodeReviewAgent(repo_path)
             # The actual API call will fail when invoked
             # This test just verifies the agent can be created
             assert agent is not None
@@ -156,7 +156,7 @@ password = "admin123"  # Hard-coded password
         repo_path, _ = sample_repo
 
         # Stay on main branch (no changes)
-        agent = SDKCodeReviewer(repo_path)
+        agent = CodeReviewAgent(repo_path)
         result = await agent.review_changes(base_branch="master")
 
         # Should have no changes

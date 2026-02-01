@@ -21,7 +21,7 @@ from code_reviewer.tools.rule_learner import RuleLearner
 from code_reviewer.models import CodeReviewResult, ReviewFinding, Severity
 
 
-class SDKCodeReviewer:
+class CodeReviewAgent:
     """
     Complete rewrite of code reviewer using Claude Agent SDK
 
@@ -351,5 +351,5 @@ async def review_code(
         for finding in result.findings:
             print(f"{finding.severity}: {finding.message}")
     """
-    reviewer = SDKCodeReviewer(repo_path=repo_path, **kwargs)
+    reviewer = CodeReviewAgent(repo_path=repo_path, **kwargs)
     return await reviewer.review_changes(base_branch=base_branch, files=files)
