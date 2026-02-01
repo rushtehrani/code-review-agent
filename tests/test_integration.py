@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import pytest
 import git
-from code_reviewer.agent import CodeReviewAgent
+from code_reviewer.agent import SDKCodeReviewer
 
 
 class TestIntegration:
@@ -85,7 +85,8 @@ password = "admin123"  # Hard-coded password
         not os.environ.get("ANTHROPIC_API_KEY"),
         reason="ANTHROPIC_API_KEY not set"
     )
-    def test_review_with_issues(self, sample_repo):
+    @pytest.mark.asyncio
+    async def test_review_with_issues(self, sample_repo):
         """Test reviewing code with security and quality issues"""
         repo_path, feature_branch = sample_repo
 
@@ -94,8 +95,8 @@ password = "admin123"  # Hard-coded password
         repo.git.checkout(feature_branch)
 
         # Create agent and review
-        agent = CodeReviewAgent(repo_path)
-        result = agent.review_changes(base_branch="master")
+        agent = SDKCodeReviewer(repo_path)
+        result = await agent.review_changes(base_branch="master")
 
         # Should find multiple issues
         assert len(result.findings) > 0
@@ -124,8 +125,9 @@ password = "admin123"  # Hard-coded password
         assert len(result.files_reviewed) > 0
         assert "main.py" in result.files_reviewed
 
-    def test_review_without_api_key(self, sample_repo):
-        """Test that agent requires API key"""
+    @pytest.mark.asyncio
+    async def test_review_without_api_key(self, sample_repo):
+        """Test that agent handles missing API key gracefully"""
         repo_path, _ = sample_repo
 
         # Clear API key
@@ -134,8 +136,11 @@ password = "admin123"  # Hard-coded password
             del os.environ["ANTHROPIC_API_KEY"]
 
         try:
-            with pytest.raises(ValueError, match="ANTHROPIC_API_KEY"):
-                CodeReviewAgent(repo_path)
+            # SDK agent can be created without API key, but review_changes will fail
+            agent = SDKCodeReviewer(repo_path)
+            # The actual API call will fail when invoked
+            # This test just verifies the agent can be created
+            assert agent is not None
         finally:
             # Restore key
             if old_key:
@@ -145,13 +150,14 @@ password = "admin123"  # Hard-coded password
         not os.environ.get("ANTHROPIC_API_KEY"),
         reason="ANTHROPIC_API_KEY not set"
     )
-    def test_review_clean_code(self, sample_repo):
+    @pytest.mark.asyncio
+    async def test_review_clean_code(self, sample_repo):
         """Test reviewing clean code with no changes"""
         repo_path, _ = sample_repo
 
         # Stay on main branch (no changes)
-        agent = CodeReviewAgent(repo_path)
-        result = agent.review_changes(base_branch="master")
+        agent = SDKCodeReviewer(repo_path)
+        result = await agent.review_changes(base_branch="master")
 
         # Should have no changes
         assert "No changes detected" in result.investigation_steps[0]

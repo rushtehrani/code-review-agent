@@ -91,7 +91,7 @@ async def example_specific_files():
     result = await review_code(
         repo_path=".",
         base_branch="main",
-        files=["code_reviewer/sdk_agent.py", "code_reviewer/agent_sdk.py"]
+        files=["code_reviewer/agent.py", "code_reviewer/mcp_tools.py"]
     )
 
     print(f"\nReviewed: {', '.join(result.files_reviewed)}")

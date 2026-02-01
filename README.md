@@ -260,8 +260,8 @@ pytest tests/ --cov=code_reviewer --cov-report=term
 code-review-agent/
 ├── code_reviewer/
 │   ├── __init__.py         # Package exports
-│   ├── sdk_agent.py        # Main SDK agent (100 lines, 77% coverage)
-│   ├── agent_sdk.py        # MCP tools (7 tools)
+│   ├── agent.py            # Main SDK agent (100 lines, 77% coverage)
+│   ├── mcp_tools.py        # MCP tools (7 tools)
 │   ├── models.py           # Data models (100% coverage)
 │   └── tools/              # Tool implementations
 │       ├── codebase_search.py  # Pattern search (70% coverage)

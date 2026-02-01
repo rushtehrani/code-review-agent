@@ -92,7 +92,7 @@ Because this uses the Claude Agent SDK, Claude can:
 You can also import and use the tools directly:
 
 ```python
-from code_reviewer.agent_sdk import (
+from code_reviewer.mcp_tools import (
     search_codebase_tool,
     read_file_tool,
     get_file_history_tool,
@@ -157,7 +157,7 @@ The SDK provides:
 By default, uses current working directory. To customize:
 
 ```python
-# Edit code_reviewer/agent_sdk.py
+# Edit code_reviewer/mcp_tools.py
 REPO_PATH = "/path/to/your/repo"
 ```
 
@@ -196,7 +196,7 @@ The rule learner automatically learns from your git history on initialization:
 pip install -r requirements.txt
 
 # Test import
-python -c "from code_reviewer.agent_sdk import server"
+python -c "from code_reviewer.mcp_tools import server"
 ```
 
 ### Tools Not Available

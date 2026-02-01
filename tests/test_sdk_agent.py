@@ -52,14 +52,14 @@ except:  # Bare except
 
     def test_sdk_agent_import(self):
         """Test that SDK agent can be imported"""
-        from code_reviewer.sdk_agent import SDKCodeReviewer, review_code
+        from code_reviewer.agent import SDKCodeReviewer, review_code
 
         assert SDKCodeReviewer is not None
         assert review_code is not None
 
     def test_sdk_agent_initialization(self, temp_git_repo):
         """Test SDK agent initialization"""
-        from code_reviewer.sdk_agent import SDKCodeReviewer
+        from code_reviewer.agent import SDKCodeReviewer
 
         reviewer = SDKCodeReviewer(repo_path=temp_git_repo)
 
@@ -71,7 +71,7 @@ except:  # Bare except
 
     def test_sdk_agent_initialization_no_git(self):
         """Test SDK agent handles non-git directory"""
-        from code_reviewer.sdk_agent import SDKCodeReviewer
+        from code_reviewer.agent import SDKCodeReviewer
 
         temp_dir = tempfile.mkdtemp()
         try:
@@ -82,7 +82,7 @@ except:  # Bare except
 
     def test_create_review_prompt(self, temp_git_repo):
         """Test review prompt creation"""
-        from code_reviewer.sdk_agent import SDKCodeReviewer
+        from code_reviewer.agent import SDKCodeReviewer
 
         reviewer = SDKCodeReviewer(repo_path=temp_git_repo)
 
@@ -98,7 +98,7 @@ except:  # Bare except
 
     def test_parse_findings_from_response(self, temp_git_repo):
         """Test parsing findings from Claude's response"""
-        from code_reviewer.sdk_agent import SDKCodeReviewer
+        from code_reviewer.agent import SDKCodeReviewer
 
         reviewer = SDKCodeReviewer(repo_path=temp_git_repo)
 
@@ -126,7 +126,7 @@ MESSAGE: Function too long
 
     def test_create_finding(self, temp_git_repo):
         """Test finding creation"""
-        from code_reviewer.sdk_agent import SDKCodeReviewer
+        from code_reviewer.agent import SDKCodeReviewer
         from code_reviewer.models import Severity
 
         reviewer = SDKCodeReviewer(repo_path=temp_git_repo)
@@ -149,7 +149,7 @@ MESSAGE: Function too long
     @pytest.mark.asyncio
     async def test_review_changes_no_git(self):
         """Test review in non-git directory"""
-        from code_reviewer.sdk_agent import SDKCodeReviewer
+        from code_reviewer.agent import SDKCodeReviewer
 
         temp_dir = tempfile.mkdtemp()
         try:
@@ -164,7 +164,7 @@ MESSAGE: Function too long
     @pytest.mark.asyncio
     async def test_review_changes_no_changes(self, temp_git_repo):
         """Test review with no changes"""
-        from code_reviewer.sdk_agent import SDKCodeReviewer
+        from code_reviewer.agent import SDKCodeReviewer
 
         # Reset to initial commit
         repo = git.Repo(temp_git_repo)
@@ -177,7 +177,7 @@ MESSAGE: Function too long
 
     def test_sdk_options_configuration(self, temp_git_repo):
         """Test that SDK options are properly configured"""
-        from code_reviewer.sdk_agent import SDKCodeReviewer
+        from code_reviewer.agent import SDKCodeReviewer
         import os
 
         reviewer = SDKCodeReviewer(
@@ -204,10 +204,10 @@ MESSAGE: Function too long
     @pytest.mark.asyncio
     async def test_review_code_convenience_function(self, temp_git_repo):
         """Test the convenience review_code function"""
-        from code_reviewer.sdk_agent import review_code
+        from code_reviewer.agent import review_code
 
         # Mock the query function since we don't have real API
-        with patch('code_reviewer.sdk_agent.query', new_callable=AsyncMock) as mock_query:
+        with patch('code_reviewer.agent.query', new_callable=AsyncMock) as mock_query:
             # Make it return empty iterator
             mock_query.return_value = iter([])
 
@@ -221,7 +221,7 @@ MESSAGE: Function too long
 
     def test_sdk_agent_tools_initialized(self, temp_git_repo):
         """Test that all tools are properly initialized"""
-        from code_reviewer.sdk_agent import SDKCodeReviewer
+        from code_reviewer.agent import SDKCodeReviewer
 
         reviewer = SDKCodeReviewer(repo_path=temp_git_repo)
 
@@ -249,7 +249,7 @@ MESSAGE: Function too long
 
     def test_parsing_handles_incomplete_findings(self, temp_git_repo):
         """Test that parsing handles incomplete findings gracefully"""
-        from code_reviewer.sdk_agent import SDKCodeReviewer
+        from code_reviewer.agent import SDKCodeReviewer
 
         reviewer = SDKCodeReviewer(repo_path=temp_git_repo)
 
@@ -270,7 +270,7 @@ MESSAGE: Some issue
 
     def test_prompt_includes_all_tools(self, temp_git_repo):
         """Test that prompt mentions all available tools"""
-        from code_reviewer.sdk_agent import SDKCodeReviewer
+        from code_reviewer.agent import SDKCodeReviewer
 
         reviewer = SDKCodeReviewer(repo_path=temp_git_repo)
         prompt = reviewer._create_review_prompt("+test", ["test.py"], "main")
@@ -285,7 +285,7 @@ MESSAGE: Some issue
 
     def test_prompt_emphasizes_agentic_behavior(self, temp_git_repo):
         """Test that prompt encourages agentic investigation"""
-        from code_reviewer.sdk_agent import SDKCodeReviewer
+        from code_reviewer.agent import SDKCodeReviewer
 
         reviewer = SDKCodeReviewer(repo_path=temp_git_repo)
         prompt = reviewer._create_review_prompt("+test", ["test.py"], "main")

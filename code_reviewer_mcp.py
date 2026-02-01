@@ -8,7 +8,7 @@ Usage:
     python code_reviewer_mcp.py
 """
 
-from code_reviewer.agent_sdk import server
+from code_reviewer.mcp_tools import server
 
 if __name__ == "__main__":
     import asyncio
